@@ -1,11 +1,3 @@
-// =====================================================
-// StockWise - script.js
-// Plain JavaScript, no libraries. Data is saved in the
-// browser using localStorage.
-// =====================================================
-
-// ---------- 1. DATA (our "database") ----------
-// products = list of objects, transactions = list of objects
 let products = JSON.parse(localStorage.getItem("sw_products")) || [
   { id: 1, name: "Basmati Rice 5kg", sku: "GRO-001", category: "Grocery", quantity: 40, reorder: 10, cost: 380, price: 450 },
   { id: 2, name: "Notebook A4", sku: "STA-001", category: "Stationery", quantity: 6, reorder: 10, cost: 25, price: 40 },
@@ -19,7 +11,6 @@ function saveData() {
   localStorage.setItem("sw_transactions", JSON.stringify(transactions));
 }
 
-// ---------- 2. SMALL HELPER FUNCTIONS ----------
 function $(id) {
   return document.getElementById(id);
 }
@@ -28,14 +19,14 @@ function money(n) {
   return "₹" + Number(n).toLocaleString("en-IN", { maximumFractionDigits: 2 });
 }
 
-// Stops user-typed text from breaking our HTML
+
 function safe(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 }
 
-// Decide stock status of one product
+
 function getStatus(p) {
   if (p.quantity === 0) return "out";
   if (p.quantity <= p.reorder) return "low";
@@ -57,7 +48,7 @@ function showToast(message) {
   toastTimer = setTimeout(() => t.classList.remove("show"), 2500);
 }
 
-// ---------- 3. SWITCHING VIEWS (Overview / Inventory / ...) ----------
+
 const titles = { overview: "Overview", inventory: "Inventory", transactions: "Transactions", reports: "Reports" };
 
 function showView(name) {
@@ -69,14 +60,14 @@ function showView(name) {
   });
 
   $("pageCrumb").textContent = titles[name];
-  $("sidebar").classList.remove("open"); // close menu on mobile
+  $("sidebar").classList.remove("open"); 
 }
 
 document.querySelectorAll(".nav-item").forEach(btn => {
   btn.addEventListener("click", () => showView(btn.dataset.view));
 });
 
-// ---------- 4. OVERVIEW PAGE ----------
+
 function renderStats() {
   let value = 0, units = 0, low = 0;
   products.forEach(p => {
@@ -92,7 +83,7 @@ function renderStats() {
 }
 
 function renderChart() {
-  // add up units per category
+  
   const totals = {};
   products.forEach(p => {
     totals[p.category] = (totals[p.category] || 0) + p.quantity;
@@ -131,7 +122,7 @@ function renderLowStock() {
 }
 
 function renderRecent() {
-  // last 5 products added, newest first
+  
   const recent = products.slice(-5).reverse();
   if (recent.length === 0) {
     $("recentTableBody").innerHTML = '<tr><td colspan="6" class="empty-state">No products yet.</td></tr>';
@@ -148,10 +139,10 @@ function renderRecent() {
     </tr>`).join("");
 }
 
-// ---------- 5. INVENTORY PAGE (search + filters) ----------
+
 function renderCategoryFilter() {
   const current = $("categoryFilter").value;
-  const cats = [...new Set(products.map(p => p.category))]; // unique categories
+  const cats = [...new Set(products.map(p => p.category))]; 
   $("categoryFilter").innerHTML = '<option value="all">All categories</option>' +
     cats.map(c => `<option value="${safe(c)}">${safe(c)}</option>`).join("");
   $("categoryFilter").value = cats.includes(current) ? current : "all";
@@ -199,7 +190,7 @@ function renderInventory() {
   $("statusFilter").addEventListener(evt, renderInventory);
 });
 
-// One click listener handles every Edit/Delete button (event delegation)
+
 document.addEventListener("click", e => {
   const btn = e.target.closest("[data-action]");
   if (!btn) return;
@@ -219,14 +210,14 @@ function deleteProduct(id) {
   }
 }
 
-// ---------- 6. ADD / EDIT PRODUCT MODAL ----------
+
 function openModal(id) { $(id).classList.add("open"); }
 function closeModal(id) { $(id).classList.remove("open"); }
 
 document.querySelectorAll("[data-close]").forEach(btn => {
   btn.addEventListener("click", () => closeModal(btn.dataset.close));
 });
-// click on the dark background also closes the modal
+
 document.querySelectorAll(".modal-backdrop").forEach(back => {
   back.addEventListener("click", e => { if (e.target === back) back.classList.remove("open"); });
 });
@@ -237,7 +228,7 @@ function openProductModal(id) {
   $("productId").value = "";
   $("productModalTitle").textContent = "Add a product";
 
-  if (id) { // editing: fill the form with existing values
+  if (id) { 
     const p = products.find(item => item.id === id);
     $("productModalTitle").textContent = "Edit product";
     $("productId").value = p.id;
@@ -256,7 +247,7 @@ $("quickAddBtn").addEventListener("click", () => openProductModal());
 $("inventoryAddBtn").addEventListener("click", () => openProductModal());
 
 $("productForm").addEventListener("submit", e => {
-  e.preventDefault(); // stop page from reloading
+  e.preventDefault(); 
 
   const data = {
     name: $("productName").value.trim(),
@@ -280,7 +271,7 @@ $("productForm").addEventListener("submit", e => {
   const id = Number($("productId").value);
   if (id) {
     const p = products.find(item => item.id === id);
-    Object.assign(p, data); // copy new values into the old product
+    Object.assign(p, data); 
     showToast("Product updated");
   } else {
     products.push({ id: Date.now(), ...data });
@@ -292,7 +283,7 @@ $("productForm").addEventListener("submit", e => {
   closeModal("productModal");
 });
 
-// ---------- 7. TRANSACTIONS ----------
+
 function renderTransactions() {
   if (transactions.length === 0) {
     $("transactionsTableBody").innerHTML = '<tr><td colspan="5" class="empty-state">No transactions yet.</td></tr>';
@@ -352,7 +343,7 @@ $("transactionForm").addEventListener("submit", e => {
   showToast("Transaction saved");
 });
 
-// ---------- 8. REPORTS ----------
+
 function renderReports() {
   let retail = 0, cost = 0;
   products.forEach(p => {
@@ -363,7 +354,7 @@ function renderReports() {
   $("retailValue").textContent = money(retail);
   $("potentialMargin").textContent = money(retail - cost);
 
-  // category summary
+  
   const groups = {};
   products.forEach(p => {
     if (!groups[p.category]) groups[p.category] = { count: 0, units: 0, value: 0 };
@@ -376,7 +367,7 @@ function renderReports() {
     ? '<tr><td colspan="4" class="empty-state">No data yet.</td></tr>'
     : names.map(n => `<tr><td>${safe(n)}</td><td>${groups[n].count}</td><td>${groups[n].units}</td><td>${money(groups[n].value)}</td></tr>`).join("");
 
-  // stock health counts
+  
   const count = { healthy: 0, low: 0, out: 0 };
   products.forEach(p => count[getStatus(p)]++);
   $("healthReport").innerHTML = `
@@ -385,7 +376,7 @@ function renderReports() {
     <div class="low-item"><span>Out of stock</span><span class="status out">${count.out}</span></div>`;
 }
 
-// ---------- 9. EXPORT CSV ----------
+
 function exportCSV() {
   if (products.length === 0) {
     showToast("Nothing to export");
@@ -394,7 +385,7 @@ function exportCSV() {
   const rows = [["Name", "SKU", "Category", "Quantity", "Reorder level", "Unit cost", "Selling price"]];
   products.forEach(p => rows.push([p.name, p.sku, p.category, p.quantity, p.reorder, p.cost, p.price]));
 
-  // wrap each value in quotes so commas inside names don't break the file
+  
   const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
 
   const link = document.createElement("a");
@@ -406,7 +397,7 @@ function exportCSV() {
 $("exportBtn").addEventListener("click", exportCSV);
 $("reportExportBtn").addEventListener("click", exportCSV);
 
-// ---------- 10. OTHER BUTTONS ----------
+
 $("seeAllLow").addEventListener("click", () => {
   $("statusFilter").value = "low";
   renderInventory();
@@ -428,7 +419,7 @@ $("mobileMenu").addEventListener("click", () => {
   $("sidebar").classList.toggle("open");
 });
 
-// ---------- 11. START THE APP ----------
+
 function renderAll() {
   renderStats();
   renderChart();
@@ -444,11 +435,11 @@ $("todayLabel").textContent = new Date().toLocaleDateString("en-IN", {
   weekday: "short", day: "numeric", month: "short", year: "numeric"
 });
 renderAll();
-// ---------- 12. LOGIN / SIGN UP ----------
+
 let users = JSON.parse(localStorage.getItem("sw_users")) || [];
 let signUpMode = false;
 
-// Turns text into a scrambled code (SHA-256), so we never store the real password
+
 async function hashText(text) {
   const bytes = new TextEncoder().encode(text);
   const buffer = await crypto.subtle.digest("SHA-256", bytes);
@@ -467,7 +458,7 @@ function setMode(signUp) {
   $("loginConfirm").required = signUp;
   $("loginError").textContent = "";
 }
-// Shows the logged-in person's name everywhere
+
 function showUser(username) {
   const words = username.split(/[\s._-]+/).filter(Boolean);
   const parts = words.length ? words : [username];
@@ -489,7 +480,7 @@ function showApp() {
 }
 function showLogin() {
   $("loginForm").reset();
-  setMode(users.length === 0);   // first visit: go straight to sign up
+  setMode(users.length === 0);   
   $("loginScreen").classList.remove("hidden");
 }
 function startSession(username) {
@@ -506,7 +497,7 @@ $("loginForm").addEventListener("submit", async e => {
 
   const username = $("loginUser").value.trim().toLowerCase();
   const password = $("loginPass").value;
-  // adding the username before hashing means two people with the same password get different codes
+  
   const hash = await hashText(username + ":" + password);
 
   if (signUpMode) {
@@ -540,7 +531,7 @@ $("logoutBtn").addEventListener("click", () => {
   showLogin();
 });
 
-// Start: show the right screen
+
 setMode(users.length === 0);
 const savedUser = sessionStorage.getItem("sw_user");
 if (savedUser) {
